@@ -142,13 +142,33 @@ export const turnosIniciales = [
 // Nomenclatura FDI: dientes adultos
 // Cuadrante 1 (sup-derecho): 18-11 | Cuadrante 2 (sup-izquierdo): 21-28
 // Cuadrante 3 (inf-izquierdo): 38-31 | Cuadrante 4 (inf-derecho): 41-48
-export const arcadaSuperior = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
-export const arcadaInferior = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+export const arcadaSuperiorAdulto = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
+export const arcadaInferiorAdulto = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+
+// Dientes temporales / infantiles (deciduos): Cuadrantes 5, 6, 7 y 8
+export const arcadaSuperiorInfantil = [55, 54, 53, 52, 51, 61, 62, 63, 64, 65];
+export const arcadaInferiorInfantil = [85, 84, 83, 82, 81, 71, 72, 73, 74, 75];
+
+// Compatibilidad hacia atrás
+export const arcadaSuperior = arcadaSuperiorAdulto;
+export const arcadaInferior = arcadaInferiorAdulto;
+
+// Nombres clínicos de las 5 superficies
+export const carasDentales = [
+  { id: 'vestibular', nombre: 'Vestibular (V)', desc: 'Cara externa hacia labios o mejillas' },
+  { id: 'palatinaLingual', nombre: 'Palatina / Lingual (P/L)', desc: 'Cara interna hacia paladar o lengua' },
+  { id: 'mesial', nombre: 'Mesial (M)', desc: 'Cara proximal hacia la línea media' },
+  { id: 'distal', nombre: 'Distal (D)', desc: 'Cara proximal opuesta a la línea media' },
+  { id: 'oclusal', nombre: 'Oclusal / Incisal (O/I)', desc: 'Superficie de masticación o corte' },
+];
 
 export const hallazgosDentales = [
-  { valor: 'Caries', color: '#ef4444', label: 'Caries' },
-  { valor: 'Restauración', color: '#3b82f6', label: 'Restauración' },
-  { valor: 'Extracción', color: '#6b7280', label: 'Extracción' },
-  { valor: 'Implante', color: '#8b5cf6', label: 'Implante' },
-  { valor: 'Sano', color: '#10b981', label: 'Sano (limpiar)' },
+  { valor: 'Caries', color: '#dc2626', label: 'Caries activa', tipo: 'superficie' },
+  { valor: 'Restauración', color: '#2563eb', label: 'Obturación / Empaste', tipo: 'superficie' },
+  { valor: 'Sellador', color: '#059669', label: 'Sellador de fosas', tipo: 'superficie' },
+  { valor: 'Corona', color: '#d97706', label: 'Corona protésica', tipo: 'general' },
+  { valor: 'Endodoncia', color: '#7c3aed', label: 'Tratamiento de conducto', tipo: 'general' },
+  { valor: 'Implante', color: '#0891b2', label: 'Implante óseo', tipo: 'general' },
+  { valor: 'Extracción', color: '#4b5563', label: 'Pieza ausente / Extracción', tipo: 'general' },
+  { valor: 'Sano', color: '#10b981', label: 'Sano / Limpiar', tipo: 'accion' },
 ];
