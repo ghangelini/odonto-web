@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { 
   Search, User, ChevronDown, X, Check, Activity, 
-  RotateCcw, Baby, Sparkles, AlertCircle, FileText, Stethoscope 
+  RotateCcw, Baby, Sparkles, AlertCircle, FileText, Stethoscope, Camera
 } from 'lucide-react';
+import ModalEscanerIA from './ModalEscanerIA';
 import { 
   arcadaSuperiorAdulto, 
   arcadaInferiorAdulto, 
@@ -454,6 +455,7 @@ export default function Odontograma({ pacientes, setPacientes }) {
   const [busqueda, setBusqueda] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
+  const [modalEscanerAbierto, setModalEscanerAbierto] = useState(false);
   
   // Selector de dentición: Adulto (Permanente) o Infantil (Decidua / Temporal)
   const [tipoDenticion, setTipoDenticion] = useState('adulto');
@@ -542,6 +544,37 @@ export default function Odontograma({ pacientes, setPacientes }) {
     );
   };
 
+  const aplicarResultadosIA = (resultadoIA) => {
+    if (!paciente || !resultadoIA) return;
+
+    if (resultadoIA.tipoDenticion) {
+      setTipoDenticion(resultadoIA.tipoDenticion);
+    }
+
+    if (resultadoIA.observacionesDetectadas) {
+      const notaNueva = observaciones 
+        ? `${observaciones}\n[Extracción IA]: ${resultadoIA.observacionesDetectadas}`
+        : `[Extracción IA]: ${resultadoIA.observacionesDetectadas}`;
+      setObservaciones(notaNueva);
+    }
+
+    setPacientes((prev) =>
+      prev.map((p) => {
+        if (p.id !== paciente.id) return p;
+        return {
+          ...p,
+          odontograma: {
+            ...(p.odontograma || {}),
+            ...(resultadoIA.odontograma || {}),
+          },
+          observacionesOdonto: resultadoIA.observacionesDetectadas 
+            ? `${p.observacionesOdonto ? `${p.observacionesOdonto}\n` : ''}[Extracción IA]: ${resultadoIA.observacionesDetectadas}`
+            : p.observacionesOdonto
+        };
+      })
+    );
+  };
+
   const arcadaSup = tipoDenticion === 'adulto' ? arcadaSuperiorAdulto : arcadaSuperiorInfantil;
   const arcadaInf = tipoDenticion === 'adulto' ? arcadaInferiorAdulto : arcadaInferiorInfantil;
 
@@ -560,30 +593,43 @@ export default function Odontograma({ pacientes, setPacientes }) {
             </p>
           </div>
 
-          {/* Toggle de dentición Adulto / Infantil */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
-            <button
-              onClick={() => setTipoDenticion('adulto')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                tipoDenticion === 'adulto'
-                  ? 'bg-white text-blue-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <User size={14} />
-              Dentición Permanente (32)
-            </button>
-            <button
-              onClick={() => setTipoDenticion('infantil')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                tipoDenticion === 'infantil'
-                  ? 'bg-white text-blue-700 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Baby size={14} />
-              Odontopediatría (20)
-            </button>
+          {/* Toggle de dentición Adulto / Infantil y Botón Escáner IA */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {paciente && (
+              <button
+                type="button"
+                onClick={() => setModalEscanerAbierto(true)}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all hover:scale-102 cursor-pointer"
+              >
+                <Sparkles size={14} className="text-purple-200 animate-pulse" />
+                <span>Escanear Ficha con IA</span>
+              </button>
+            )}
+
+            <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
+              <button
+                onClick={() => setTipoDenticion('adulto')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  tipoDenticion === 'adulto'
+                    ? 'bg-white text-blue-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <User size={14} />
+                Dentición Permanente (32)
+              </button>
+              <button
+                onClick={() => setTipoDenticion('infantil')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  tipoDenticion === 'infantil'
+                    ? 'bg-white text-blue-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Baby size={14} />
+                Odontopediatría (20)
+              </button>
+            </div>
           </div>
         </div>
 
@@ -830,6 +876,15 @@ export default function Odontograma({ pacientes, setPacientes }) {
               dataDiente={paciente.odontograma?.[dienteSeleccionado] || null}
               onGuardar={guardarDiente}
               onCerrar={() => setDienteSeleccionado(null)}
+            />
+          )}
+
+          {/* Modal de Escáner y Digitalización con IA */}
+          {modalEscanerAbierto && (
+            <ModalEscanerIA
+              paciente={paciente}
+              onAplicarResultados={aplicarResultadosIA}
+              onCerrar={() => setModalEscanerAbierto(false)}
             />
           )}
         </>
