@@ -51,7 +51,7 @@ function EstadoBadge({ estado }) {
 }
 
 // ── Componente principal Dashboard ──────────────────────────
-export default function Dashboard({ pacientes, turnos, setVistaActual }) {
+export default function Dashboard({ pacientes, turnos, setVistaActual, onVerOdontograma }) {
   const hoyStr = hoyLocal();
 
   // Filtrar turnos del día actual (dinámico con la fecha de hoy)
@@ -200,8 +200,37 @@ export default function Dashboard({ pacientes, turnos, setVistaActual }) {
                     </div>
                   </div>
 
-                  {/* Badge de estado */}
-                  <EstadoBadge estado={turno.estado} />
+                  {/* Badge de estado y Acceso rápido a Odontograma */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        let pacId = turno.pacienteId;
+                        if (!pacId && turno.dni) {
+                          const p = pacientes?.find((x) => x.dni === turno.dni);
+                          pacId = p?.id;
+                        }
+                        if (pacId && onVerOdontograma) {
+                          onVerOdontograma(pacId);
+                        } else {
+                          setVistaActual('odontograma');
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Ver odontograma de este paciente"
+                    >
+                      <svg 
+                        viewBox="0 0 24 24" 
+                        className="w-4 h-4 fill-none stroke-current stroke-2 stroke-linecap-round stroke-linejoin-round"
+                      >
+                        <path d="M2.5 10c2.5-3 6.5-4 9.5-4s7 1 9.5 4c-1.5 6-5.5 9-9.5 9s-8-3-9.5-9z" />
+                        <path d="M4.5 10.5c2.5 1.5 5 2 7.5 2s5-.5 7.5-2" />
+                        <path d="M10 8.5v3" />
+                        <path d="M14 8.5v3" />
+                      </svg>
+                    </button>
+                    <EstadoBadge estado={turno.estado} />
+                  </div>
                 </div>
               ))
             )}

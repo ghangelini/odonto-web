@@ -1,14 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
-  Search, User, ChevronDown, X, Check, Activity, 
-  RotateCcw, Baby, Sparkles, AlertCircle, FileText, Stethoscope, Camera
+  Search, ChevronDown, X, Check, Activity, 
+  RotateCcw, Sparkles, AlertCircle, FileText, Stethoscope
 } from 'lucide-react';
 import ModalEscanerIA from './ModalEscanerIA';
 import { 
   arcadaSuperiorAdulto, 
   arcadaInferiorAdulto, 
-  arcadaSuperiorInfantil, 
-  arcadaInferiorInfantil, 
   hallazgosDentales,
   carasDentales 
 } from '../data/mockData';
@@ -449,16 +447,24 @@ function ModalDienteClinico({ diente, dataDiente, onGuardar, onCerrar }) {
 // ─────────────────────────────────────────────────────────────
 // Componente Principal Odontograma
 // ─────────────────────────────────────────────────────────────
-export default function Odontograma({ pacientes, setPacientes }) {
-  const [pacienteSeleccionadoId, setPacienteSeleccionadoId] = useState(null);
+export default function Odontograma({ pacientes, setPacientes, pacienteInicialId = null }) {
+  const [pacienteSeleccionadoId, setPacienteSeleccionadoId] = useState(pacienteInicialId);
   const [dienteSeleccionado, setDienteSeleccionado] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
   const [modalEscanerAbierto, setModalEscanerAbierto] = useState(false);
-  
-  // Selector de dentición: Adulto (Permanente) o Infantil (Decidua / Temporal)
-  const [tipoDenticion, setTipoDenticion] = useState('adulto');
+
+  // Si cambia pacienteInicialId desde fuera (ej: al hacer clic en la boca de un turno), actualizar
+  useEffect(() => {
+    if (pacienteInicialId) {
+      setPacienteSeleccionadoId(pacienteInicialId);
+      const p = pacientes.find((x) => x.id === pacienteInicialId);
+      if (p) {
+        setObservaciones(p.observacionesOdonto || '');
+      }
+    }
+  }, [pacienteInicialId, pacientes]);
 
   const paciente = useMemo(
     () => pacientes.find((p) => p.id === pacienteSeleccionadoId) || null,
@@ -547,10 +553,6 @@ export default function Odontograma({ pacientes, setPacientes }) {
   const aplicarResultadosIA = (resultadoIA) => {
     if (!paciente || !resultadoIA) return;
 
-    if (resultadoIA.tipoDenticion) {
-      setTipoDenticion(resultadoIA.tipoDenticion);
-    }
-
     if (resultadoIA.observacionesDetectadas) {
       const notaNueva = observaciones 
         ? `${observaciones}\n[Extracción IA]: ${resultadoIA.observacionesDetectadas}`
@@ -575,8 +577,8 @@ export default function Odontograma({ pacientes, setPacientes }) {
     );
   };
 
-  const arcadaSup = tipoDenticion === 'adulto' ? arcadaSuperiorAdulto : arcadaSuperiorInfantil;
-  const arcadaInf = tipoDenticion === 'adulto' ? arcadaInferiorAdulto : arcadaInferiorInfantil;
+  const arcadaSup = arcadaSuperiorAdulto;
+  const arcadaInf = arcadaInferiorAdulto;
 
   return (
     <div className="space-y-6">
@@ -593,7 +595,7 @@ export default function Odontograma({ pacientes, setPacientes }) {
             </p>
           </div>
 
-          {/* Toggle de dentición Adulto / Infantil y Botón Escáner IA */}
+          {/* Botón Escáner IA */}
           <div className="flex flex-wrap items-center gap-2.5">
             {paciente && (
               <button
@@ -606,31 +608,6 @@ export default function Odontograma({ pacientes, setPacientes }) {
                 <span>Asistente IA (Voz / Foto)</span>
               </button>
             )}
-
-            <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
-              <button
-                onClick={() => setTipoDenticion('adulto')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  tipoDenticion === 'adulto'
-                    ? 'bg-white text-blue-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <User size={14} />
-                Dentición Permanente (32)
-              </button>
-              <button
-                onClick={() => setTipoDenticion('infantil')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  tipoDenticion === 'infantil'
-                    ? 'bg-white text-blue-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Baby size={14} />
-                Odontopediatría (20)
-              </button>
-            </div>
           </div>
         </div>
 
@@ -751,8 +728,8 @@ export default function Odontograma({ pacientes, setPacientes }) {
               <div className="min-w-[780px] flex flex-col items-center">
                 {/* Indicador Cuadrantes Superiores */}
                 <div className="w-full flex justify-between px-12 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
-                  <span>Cuadrante {tipoDenticion === 'adulto' ? '1 (Superior Derecho)' : '5 (Sup. Der.)'}</span>
-                  <span>Cuadrante {tipoDenticion === 'adulto' ? '2 (Superior Izquierdo)' : '6 (Sup. Izq.)'}</span>
+                  <span>Cuadrante 1 (Superior Derecho)</span>
+                  <span>Cuadrante 2 (Superior Izquierdo)</span>
                 </div>
 
                 {/* Arcada Superior */}
@@ -806,8 +783,8 @@ export default function Odontograma({ pacientes, setPacientes }) {
 
                 {/* Indicador Cuadrantes Inferiores */}
                 <div className="w-full flex justify-between px-12 text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
-                  <span>Cuadrante {tipoDenticion === 'adulto' ? '4 (Inferior Derecho)' : '8 (Inf. Der.)'}</span>
-                  <span>Cuadrante {tipoDenticion === 'adulto' ? '3 (Inferior Izquierdo)' : '7 (Inf. Izq.)'}</span>
+                  <span>Cuadrante 4 (Inferior Derecho)</span>
+                  <span>Cuadrante 3 (Inferior Izquierdo)</span>
                 </div>
               </div>
             </div>

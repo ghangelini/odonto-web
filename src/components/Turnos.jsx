@@ -10,6 +10,10 @@ import {
   Play,
   Filter,
   UserCheck,
+  Trash2,
+  Edit2,
+  Smile,
+  AlertTriangle,
 } from 'lucide-react';
 import { doctoresClinica } from '../data/mockData';
 
@@ -70,15 +74,21 @@ const formatearFecha = (fechaISO) => {
 };
 
 // ─── Componente principal: Turnos ───────────────────────────────────────────
-const Turnos = ({ turnos, setTurnos, pacientes }) => {
+const Turnos = ({ turnos, setTurnos, pacientes, onVerOdontograma }) => {
   // Estado del filtro activo: "hoy" | "manana" | "semana"
   const [filtroFecha, setFiltroFecha] = useState('hoy');
   // Término de búsqueda por nombre de paciente
   const [busqueda, setBusqueda] = useState('');
   // Controla la visibilidad del modal de nuevo turno
   const [mostrarModal, setMostrarModal] = useState(false);
+  
+  // Turno que se está editando (null si es nuevo turno)
+  const [turnoEnEdicion, setTurnoEnEdicion] = useState(null);
+  
+  // Turno a cancelar (para modal de confirmación)
+  const [turnoACancelar, setTurnoACancelar] = useState(null);
 
-  // Estado del formulario de nuevo turno
+  // Estado del formulario de nuevo turno o edición
   const [nuevoTurno, setNuevoTurno] = useState({
     pacienteNombre: '',
     dni: '',
@@ -141,28 +151,49 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
     );
   };
 
-  // ─── Guardar nuevo turno ────────────────────────────────────────────────
+  // ─── Guardar nuevo turno o actualizar existente ─────────────────────────
   const guardarTurno = (e) => {
     e.preventDefault();
-    const id = Math.max(0, ...turnos.map((t) => t.id)) + 1;
 
     // Intentar vincular con paciente existente por DNI
     const pacienteExistente = pacientes?.find((p) => p.dni === nuevoTurno.dni);
     const doctorObj = doctoresClinica.find((d) => d.nombre === nuevoTurno.doctor);
 
-    const turnoNuevo = {
-      id,
-      pacienteId: pacienteExistente?.id || null,
-      pacienteNombre: nuevoTurno.pacienteNombre,
-      dni: nuevoTurno.dni,
-      fecha: nuevoTurno.fecha,
-      hora: nuevoTurno.hora,
-      doctor: nuevoTurno.doctor,
-      especialidad: doctorObj?.especialidad || 'Odontología General',
-      estado: 'Pendiente',
-    };
+    if (turnoEnEdicion) {
+      // Actualizar turno existente
+      setTurnos((prev) =>
+        prev.map((t) => {
+          if (t.id !== turnoEnEdicion.id) return t;
+          return {
+            ...t,
+            pacienteId: pacienteExistente?.id || t.pacienteId || null,
+            pacienteNombre: nuevoTurno.pacienteNombre,
+            dni: nuevoTurno.dni,
+            fecha: nuevoTurno.fecha,
+            hora: nuevoTurno.hora,
+            doctor: nuevoTurno.doctor,
+            especialidad: doctorObj?.especialidad || t.especialidad || 'Odontología General',
+          };
+        })
+      );
+      setTurnoEnEdicion(null);
+    } else {
+      // Crear nuevo turno
+      const id = Math.max(0, ...turnos.map((t) => t.id)) + 1;
+      const turnoNuevo = {
+        id,
+        pacienteId: pacienteExistente?.id || null,
+        pacienteNombre: nuevoTurno.pacienteNombre,
+        dni: nuevoTurno.dni,
+        fecha: nuevoTurno.fecha,
+        hora: nuevoTurno.hora,
+        doctor: nuevoTurno.doctor,
+        especialidad: doctorObj?.especialidad || 'Odontología General',
+        estado: 'Pendiente',
+      };
+      setTurnos((prev) => [...prev, turnoNuevo]);
+    }
 
-    setTurnos((prev) => [...prev, turnoNuevo]);
     setMostrarModal(false);
     // Resetear formulario
     setNuevoTurno({
@@ -172,6 +203,42 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
       hora: '',
       doctor: doctoresClinica[0]?.nombre || 'Dr. Ramírez',
     });
+  };
+
+  // ─── Abrir modal para editar turno ──────────────────────────────────────
+  const abrirEditarTurno = (turno) => {
+    setTurnoEnEdicion(turno);
+    setNuevoTurno({
+      pacienteNombre: turno.pacienteNombre,
+      dni: turno.dni,
+      fecha: turno.fecha,
+      hora: turno.hora,
+      doctor: turno.doctor || doctoresClinica[0]?.nombre || 'Dr. Ramírez',
+    });
+    setMostrarModal(true);
+  };
+
+  // ─── Confirmar y cancelar/borrar turno ──────────────────────────────────
+  const confirmarCancelarTurno = () => {
+    if (!turnoACancelar) return;
+    setTurnos((prev) => prev.filter((t) => t.id !== turnoACancelar.id));
+    setTurnoACancelar(null);
+  };
+
+  // ─── Ir al odontograma del paciente desde el turno ──────────────────────
+  const handleIrAOdontograma = (turno) => {
+    if (!onVerOdontograma) return;
+    let pacienteId = turno.pacienteId;
+    if (!pacienteId && turno.dni) {
+      const p = pacientes?.find((pac) => pac.dni === turno.dni);
+      pacienteId = p?.id;
+    }
+    if (pacienteId) {
+      onVerOdontograma(pacienteId);
+    } else {
+      // Si el paciente aún no está en la base de pacientes, podemos crearlo o buscarlo
+      alert(`El paciente "${turno.pacienteNombre}" (DNI: ${turno.dni}) no posee aún ficha odontológica creada.`);
+    }
   };
 
   // ─── Clases de badge de profesional / doctor ────────────────────────────
@@ -223,7 +290,17 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
           </p>
         </div>
         <button
-          onClick={() => setMostrarModal(true)}
+          onClick={() => {
+            setTurnoEnEdicion(null);
+            setNuevoTurno({
+              pacienteNombre: '',
+              dni: '',
+              fecha: hoyLocal(),
+              hora: '',
+              doctor: doctoresClinica[0]?.nombre || 'Dr. Ramírez',
+            });
+            setMostrarModal(true);
+          }}
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
         >
           <Plus className="w-5 h-5" />
@@ -388,29 +465,73 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
 
                       {/* Acciones */}
                       <td className="px-5 py-3.5 text-right">
-                        {turno.estado === 'Pendiente' && (
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Botón Boca: Ir a Odontograma */}
                           <button
-                            onClick={() => cambiarEstado(turno.id, 'En curso')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
+                            type="button"
+                            onClick={() => handleIrAOdontograma(turno)}
+                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            title="Ir al odontograma de este paciente"
                           >
-                            <Play className="w-3.5 h-3.5" />
-                            Iniciar
+                            <svg 
+                              viewBox="0 0 24 24" 
+                              className="w-4 h-4 fill-none stroke-current stroke-2 stroke-linecap-round stroke-linejoin-round"
+                            >
+                              {/* Icono de boca / labios con sonrisa y dientes */}
+                              <path d="M2.5 10c2.5-3 6.5-4 9.5-4s7 1 9.5 4c-1.5 6-5.5 9-9.5 9s-8-3-9.5-9z" />
+                              <path d="M4.5 10.5c2.5 1.5 5 2 7.5 2s5-.5 7.5-2" />
+                              <path d="M10 8.5v3" />
+                              <path d="M14 8.5v3" />
+                            </svg>
                           </button>
-                        )}
-                        {turno.estado === 'En curso' && (
+
+                          {/* Botón Lapicito: Editar Turno */}
                           <button
-                            onClick={() => cambiarEstado(turno.id, 'Finalizado')}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                            type="button"
+                            onClick={() => abrirEditarTurno(turno)}
+                            className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                            title="Editar turno"
                           >
-                            <Check className="w-3.5 h-3.5" />
-                            Finalizar
+                            <Edit2 className="w-4 h-4" />
                           </button>
-                        )}
-                        {turno.estado === 'Finalizado' && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600">
-                            <Check className="w-4 h-4" />
-                          </span>
-                        )}
+
+                          {/* Botón Tachito: Cancelar/Borrar Turno */}
+                          <button
+                            type="button"
+                            onClick={() => setTurnoACancelar(turno)}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Cancelar / Borrar turno"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+
+                          <div className="w-px h-4 bg-slate-200 mx-1" />
+
+                          {/* Estado / Iniciar / Finalizar */}
+                          {turno.estado === 'Pendiente' && (
+                            <button
+                              onClick={() => cambiarEstado(turno.id, 'En curso')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Play className="w-3 h-3" />
+                              Iniciar
+                            </button>
+                          )}
+                          {turno.estado === 'En curso' && (
+                            <button
+                              onClick={() => cambiarEstado(turno.id, 'Finalizado')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                            >
+                              <Check className="w-3 h-3" />
+                              Finalizar
+                            </button>
+                          )}
+                          {turno.estado === 'Finalizado' && (
+                            <span className="inline-flex items-center px-2 py-1 text-xs font-medium text-emerald-600">
+                              <Check className="w-4 h-4" />
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -451,8 +572,8 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                     </div>
                   </div>
 
-                  {/* Profesional Asignado + Acción */}
-                  <div className="flex items-center justify-between pt-1">
+                  {/* Profesional Asignado + Acciones */}
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-100">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badgeDoctor(turno.doctor)}`}
                     >
@@ -460,30 +581,69 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                       <span>{turno.doctor || 'Dr. Asignado'}</span>
                     </span>
 
-                    {turno.estado === 'Pendiente' && (
+                    <div className="flex items-center gap-1">
+                      {/* Botón Boca */}
                       <button
-                        onClick={() => cambiarEstado(turno.id, 'En curso')}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer"
+                        type="button"
+                        onClick={() => handleIrAOdontograma(turno)}
+                        className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                        title="Ir al odontograma de este paciente"
                       >
-                        <Play className="w-3.5 h-3.5" />
-                        Iniciar
+                        <svg 
+                          viewBox="0 0 24 24" 
+                          className="w-4 h-4 fill-none stroke-current stroke-2 stroke-linecap-round stroke-linejoin-round"
+                        >
+                          <path d="M2.5 10c2.5-3 6.5-4 9.5-4s7 1 9.5 4c-1.5 6-5.5 9-9.5 9s-8-3-9.5-9z" />
+                          <path d="M4.5 10.5c2.5 1.5 5 2 7.5 2s5-.5 7.5-2" />
+                          <path d="M10 8.5v3" />
+                          <path d="M14 8.5v3" />
+                        </svg>
                       </button>
-                    )}
-                    {turno.estado === 'En curso' && (
+
+                      {/* Botón Lapicito */}
                       <button
-                        onClick={() => cambiarEstado(turno.id, 'Finalizado')}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                        type="button"
+                        onClick={() => abrirEditarTurno(turno)}
+                        className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer"
+                        title="Editar turno"
                       >
-                        <Check className="w-3.5 h-3.5" />
-                        Finalizar
+                        <Edit2 className="w-4 h-4" />
                       </button>
-                    )}
-                    {turno.estado === 'Finalizado' && (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-                        <Check className="w-4 h-4" />
-                        Completado
-                      </span>
-                    )}
+
+                      {/* Botón Tachito */}
+                      <button
+                        type="button"
+                        onClick={() => setTurnoACancelar(turno)}
+                        className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title="Cancelar / Borrar turno"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+
+                      {turno.estado === 'Pendiente' && (
+                        <button
+                          onClick={() => cambiarEstado(turno.id, 'En curso')}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors cursor-pointer ml-1"
+                        >
+                          <Play className="w-3 h-3" />
+                          Iniciar
+                        </button>
+                      )}
+                      {turno.estado === 'En curso' && (
+                        <button
+                          onClick={() => cambiarEstado(turno.id, 'Finalizado')}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer ml-1"
+                        >
+                          <Check className="w-3 h-3" />
+                          Finalizar
+                        </button>
+                      )}
+                      {turno.estado === 'Finalizado' && (
+                        <span className="inline-flex items-center gap-1 text-xs text-emerald-600 ml-1">
+                          <Check className="w-4 h-4" />
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -506,8 +666,17 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
             {/* Encabezado del modal */}
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                Nuevo Turno
+                {turnoEnEdicion ? (
+                  <>
+                    <Edit2 className="w-5 h-5 text-amber-600" />
+                    Editar Turno
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                    Nuevo Turno
+                  </>
+                )}
               </h3>
               <button
                 onClick={() => setMostrarModal(false)}
@@ -631,12 +800,57 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+                  className={`px-5 py-2.5 text-sm font-medium text-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${
+                    turnoEnEdicion ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
                 >
-                  Guardar Turno
+                  {turnoEnEdicion ? 'Guardar Cambios' : 'Guardar Turno'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════ Modal: Confirmar Cancelación de Turno ═══════ */}
+      {turnoACancelar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setTurnoACancelar(null)}
+          />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-800">
+                ¿Desea cancelar el turno?
+              </h3>
+              <p className="text-sm text-gray-500 mt-2">
+                Se cancelará el turno de <span className="font-semibold text-gray-800">{turnoACancelar.pacienteNombre}</span> para el{' '}
+                <span className="font-semibold text-gray-800">{formatearFecha(turnoACancelar.fecha)}</span> a las{' '}
+                <span className="font-semibold text-gray-800">{turnoACancelar.hora} hs</span>.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setTurnoACancelar(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+              >
+                No, mantener
+              </button>
+              <button
+                type="button"
+                onClick={confirmarCancelarTurno}
+                className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
+              >
+                Sí, cancelar turno
+              </button>
+            </div>
           </div>
         </div>
       )}

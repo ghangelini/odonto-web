@@ -9,6 +9,7 @@ export default function App() {
   // Estado global de la aplicación persistido en localStorage
   const [vistaActual, setVistaActual] = useState('dashboard');
   const [sidebarAbierto, setSidebarAbierto] = useState(false);
+  const [pacienteSeleccionadoOdontogramaId, setPacienteSeleccionadoOdontogramaId] = useState(null);
 
   const [pacientes, setPacientes] = useState(() => {
     try {
@@ -45,6 +46,11 @@ export default function App() {
     }
   }, [turnos]);
 
+  const irAOdontogramaDePaciente = (pacienteId) => {
+    setPacienteSeleccionadoOdontogramaId(pacienteId);
+    setVistaActual('odontograma');
+  };
+
   // Renderiza la vista activa
   const renderVista = () => {
     switch (vistaActual) {
@@ -54,6 +60,7 @@ export default function App() {
             pacientes={pacientes}
             turnos={turnos}
             setVistaActual={setVistaActual}
+            onVerOdontograma={irAOdontogramaDePaciente}
           />
         );
       case 'turnos':
@@ -62,6 +69,7 @@ export default function App() {
             turnos={turnos}
             setTurnos={setTurnos}
             pacientes={pacientes}
+            onVerOdontograma={irAOdontogramaDePaciente}
           />
         );
       case 'odontograma':
@@ -69,6 +77,7 @@ export default function App() {
           <Odontograma
             pacientes={pacientes}
             setPacientes={setPacientes}
+            pacienteInicialId={pacienteSeleccionadoOdontogramaId}
           />
         );
       default:
