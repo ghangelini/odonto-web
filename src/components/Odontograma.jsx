@@ -600,9 +600,10 @@ export default function Odontograma({ pacientes, setPacientes }) {
                 type="button"
                 onClick={() => setModalEscanerAbierto(true)}
                 className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 hover:from-purple-800 hover:to-blue-800 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition-all hover:scale-102 cursor-pointer"
+                title="Cargar con IA mediante dictado por voz, texto o foto de ficha"
               >
                 <Sparkles size={14} className="text-purple-200 animate-pulse" />
-                <span>Escanear Ficha con IA</span>
+                <span>Asistente IA (Voz / Foto)</span>
               </button>
             )}
 
