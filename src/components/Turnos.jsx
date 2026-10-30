@@ -13,26 +13,32 @@ import {
 
 // ─── Utilidades de fecha ────────────────────────────────────────────────────
 /**
- * Devuelve la fecha actual en formato YYYY-MM-DD (zona local).
+ * Devuelve la fecha actual en formato YYYY-MM-DD en la zona horaria local.
  */
-const hoy = () => {
+export const hoyLocal = () => {
   const d = new Date();
-  return d.toISOString().split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 /**
- * Devuelve la fecha de mañana en formato YYYY-MM-DD.
+ * Devuelve la fecha de mañana en formato YYYY-MM-DD local.
  */
-const manana = () => {
+export const mananaLocal = () => {
   const d = new Date();
   d.setDate(d.getDate() + 1);
-  return d.toISOString().split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 /**
- * Devuelve un Set con las fechas de la semana actual (lunes a domingo).
+ * Devuelve un Set con las fechas de la semana actual (lunes a domingo) local.
  */
-const fechasDeLaSemana = () => {
+export const fechasDeLaSemanaLocal = () => {
   const ahora = new Date();
   const dia = ahora.getDay(); // 0=domingo
   const lunes = new Date(ahora);
@@ -42,7 +48,10 @@ const fechasDeLaSemana = () => {
   for (let i = 0; i < 7; i++) {
     const d = new Date(lunes);
     d.setDate(lunes.getDate() + i);
-    fechas.add(d.toISOString().split('T')[0]);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    fechas.add(`${year}-${month}-${day}`);
   }
   return fechas;
 };
@@ -71,7 +80,7 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
   const [nuevoTurno, setNuevoTurno] = useState({
     pacienteNombre: '',
     dni: '',
-    fecha: hoy(),
+    fecha: hoyLocal(),
     hora: '',
     especialidad: 'Clínica Médica',
   });
@@ -82,13 +91,13 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
 
     // Filtro por rango de fecha
     if (filtroFecha === 'hoy') {
-      const fechaHoy = hoy();
+      const fechaHoy = hoyLocal();
       resultado = resultado.filter((t) => t.fecha === fechaHoy);
     } else if (filtroFecha === 'manana') {
-      const fechaManana = manana();
+      const fechaManana = mananaLocal();
       resultado = resultado.filter((t) => t.fecha === fechaManana);
     } else if (filtroFecha === 'semana') {
-      const fechasSemana = fechasDeLaSemana();
+      const fechasSemana = fechasDeLaSemanaLocal();
       resultado = resultado.filter((t) => fechasSemana.has(t.fecha));
     }
 
@@ -155,7 +164,7 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
     setNuevoTurno({
       pacienteNombre: '',
       dni: '',
-      fecha: hoy(),
+      fecha: hoyLocal(),
       hora: '',
       especialidad: 'Clínica Médica',
     });

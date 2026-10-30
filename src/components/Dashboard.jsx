@@ -8,13 +8,12 @@ import {
   Smile,
   TrendingUp,
 } from 'lucide-react';
+import { hoyLocal } from './Turnos';
 
 // ────────────────────────────────────────────────────────────
 // Dashboard – Vista principal del consultorio odontológico
 // Muestra KPIs del día, turnos de hoy y resumen odontológico.
 // ────────────────────────────────────────────────────────────
-
-const HOY = '2026-10-27'; // Fecha de referencia para la demo
 
 // ── Componente tarjeta KPI ──────────────────────────────────
 function KpiCard({ icono: Icono, valor, etiqueta, colorClase }) {
@@ -53,10 +52,12 @@ function EstadoBadge({ estado }) {
 
 // ── Componente principal Dashboard ──────────────────────────
 export default function Dashboard({ pacientes, turnos, setVistaActual }) {
-  // Filtrar turnos del día actual
+  const hoyStr = hoyLocal();
+
+  // Filtrar turnos del día actual (dinámico con la fecha de hoy)
   const turnosHoy = useMemo(
-    () => turnos.filter((t) => t.fecha === HOY),
-    [turnos]
+    () => turnos.filter((t) => t.fecha === hoyStr),
+    [turnos, hoyStr]
   );
 
   // ── Cálculos de KPIs ──
