@@ -193,8 +193,9 @@ export default function Dashboard({ pacientes, turnos, setVistaActual }) {
                       <p className="text-sm font-medium text-gray-800 truncate">
                         {turno.pacienteNombre}
                       </p>
-                      <p className="text-xs text-gray-400 truncate">
-                        {turno.especialidad}
+                      <p className="text-xs text-indigo-600 font-medium truncate">
+                        {turno.doctor || 'Dr. Asignado'}
+                        {turno.especialidad ? ` · ${turno.especialidad}` : ''}
                       </p>
                     </div>
                   </div>

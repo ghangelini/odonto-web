@@ -9,7 +9,9 @@ import {
   Check,
   Play,
   Filter,
+  UserCheck,
 } from 'lucide-react';
+import { doctoresClinica } from '../data/mockData';
 
 // ─── Utilidades de fecha ────────────────────────────────────────────────────
 /**
@@ -82,7 +84,7 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
     dni: '',
     fecha: hoyLocal(),
     hora: '',
-    especialidad: 'Clínica Médica',
+    doctor: doctoresClinica[0]?.nombre || 'Dr. Ramírez',
   });
 
   // ─── Filtrado de turnos ─────────────────────────────────────────────────
@@ -146,6 +148,7 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
 
     // Intentar vincular con paciente existente por DNI
     const pacienteExistente = pacientes?.find((p) => p.dni === nuevoTurno.dni);
+    const doctorObj = doctoresClinica.find((d) => d.nombre === nuevoTurno.doctor);
 
     const turnoNuevo = {
       id,
@@ -154,7 +157,8 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
       dni: nuevoTurno.dni,
       fecha: nuevoTurno.fecha,
       hora: nuevoTurno.hora,
-      especialidad: nuevoTurno.especialidad,
+      doctor: nuevoTurno.doctor,
+      especialidad: doctorObj?.especialidad || 'Odontología General',
       estado: 'Pendiente',
     };
 
@@ -166,16 +170,22 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
       dni: '',
       fecha: hoyLocal(),
       hora: '',
-      especialidad: 'Clínica Médica',
+      doctor: doctoresClinica[0]?.nombre || 'Dr. Ramírez',
     });
   };
 
-  // ─── Clases de badge de especialidad ────────────────────────────────────
-  const badgeEspecialidad = (especialidad) => {
-    if (especialidad === 'Odontología') {
-      return 'bg-teal-100 text-teal-800 border border-teal-200';
+  // ─── Clases de badge de profesional / doctor ────────────────────────────
+  const badgeDoctor = (doctor) => {
+    if (doctor?.includes('Fernández')) {
+      return 'bg-purple-50 text-purple-700 border border-purple-200';
     }
-    return 'bg-blue-100 text-blue-800 border border-blue-200';
+    if (doctor?.includes('Castro')) {
+      return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+    }
+    if (doctor?.includes('Benítez')) {
+      return 'bg-amber-50 text-amber-700 border border-amber-200';
+    }
+    return 'bg-blue-50 text-blue-700 border border-blue-200';
   };
 
   // ─── Clases de badge de estado ──────────────────────────────────────────
@@ -311,7 +321,7 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                       DNI
                     </th>
                     <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      Especialidad
+                      Profesional Asignado
                     </th>
                     <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       Estado
@@ -354,12 +364,16 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                         {turno.dni}
                       </td>
 
-                      {/* Especialidad */}
+                      {/* Profesional Asignado */}
                       <td className="px-5 py-3.5">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeEspecialidad(turno.especialidad)}`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badgeDoctor(turno.doctor)}`}
                         >
-                          {turno.especialidad}
+                          <UserCheck className="w-3.5 h-3.5" />
+                          <span>{turno.doctor || 'Dr. Asignado'}</span>
+                          {turno.especialidad && (
+                            <span className="text-[10px] opacity-75 hidden xl:inline">({turno.especialidad})</span>
+                          )}
                         </span>
                       </td>
 
@@ -437,12 +451,13 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                     </div>
                   </div>
 
-                  {/* Especialidad + Acción */}
+                  {/* Profesional Asignado + Acción */}
                   <div className="flex items-center justify-between pt-1">
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badgeEspecialidad(turno.especialidad)}`}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${badgeDoctor(turno.doctor)}`}
                     >
-                      {turno.especialidad}
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span>{turno.doctor || 'Dr. Asignado'}</span>
                     </span>
 
                     {turno.estado === 'Pendiente' && (
@@ -581,21 +596,26 @@ const Turnos = ({ turnos, setTurnos, pacientes }) => {
                 </div>
               </div>
 
-              {/* Especialidad */}
+              {/* Profesional Odontológico Asignado */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Especialidad
+                  Profesional Odontológico Asignado
                 </label>
-                <select
-                  value={nuevoTurno.especialidad}
-                  onChange={(e) =>
-                    setNuevoTurno({ ...nuevoTurno, especialidad: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
-                >
-                  <option value="Clínica Médica">Clínica Médica</option>
-                  <option value="Odontología">Odontología</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={nuevoTurno.doctor}
+                    onChange={(e) =>
+                      setNuevoTurno({ ...nuevoTurno, doctor: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white font-medium"
+                  >
+                    {doctoresClinica.map((doc) => (
+                      <option key={doc.id} value={doc.nombre}>
+                        {doc.nombre} — {doc.especialidad}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <hr className="border-gray-200" />

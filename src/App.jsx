@@ -82,6 +82,15 @@ export default function App() {
     }
   };
 
+  const handleRestablecerDemo = () => {
+    if (window.confirm('¿Deseas restablecer todos los turnos y pacientes a los datos iniciales de fábrica?')) {
+      localStorage.removeItem('odonto_turnos');
+      localStorage.removeItem('odonto_pacientes');
+      setTurnos(turnosIniciales);
+      setPacientes(pacientesIniciales);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar de navegación */}
@@ -97,6 +106,7 @@ export default function App() {
         <TopBar
           setSidebarAbierto={setSidebarAbierto}
           vistaActual={vistaActual}
+          onRestablecerDemo={handleRestablecerDemo}
         />
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">

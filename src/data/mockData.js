@@ -134,24 +134,32 @@ const fechaRelativa = (diasOffset) => {
   return `${year}-${month}-${day}`;
 };
 
+// Listado de profesionales / odontólogos de la clínica
+export const doctoresClinica = [
+  { id: 'dr_ramirez', nombre: 'Dr. Ramírez', especialidad: 'Clínica General' },
+  { id: 'dra_fernandez', nombre: 'Dra. Fernández', especialidad: 'Ortodoncia & Estética' },
+  { id: 'dr_castro', nombre: 'Dr. Castro', especialidad: 'Cirugía & Implantes' },
+  { id: 'dra_benitez', nombre: 'Dra. Benítez', especialidad: 'Endodoncia & Prótesis' },
+];
+
 export const turnosIniciales = [
   // Turnos para HOY
-  { id: 1, pacienteId: 1, pacienteNombre: 'María González', dni: '28456789', fecha: fechaRelativa(0), hora: '08:30', especialidad: 'Clínica Médica', estado: 'Finalizado' },
-  { id: 2, pacienteId: 2, pacienteNombre: 'Carlos Rodríguez', dni: '31789456', fecha: fechaRelativa(0), hora: '09:00', especialidad: 'Odontología', estado: 'Finalizado' },
-  { id: 3, pacienteId: 3, pacienteNombre: 'Ana Martínez', dni: '35123456', fecha: fechaRelativa(0), hora: '09:30', especialidad: 'Clínica Médica', estado: 'En curso' },
-  { id: 4, pacienteId: 4, pacienteNombre: 'Jorge López', dni: '26890123', fecha: fechaRelativa(0), hora: '10:00', especialidad: 'Clínica Médica', estado: 'Pendiente' },
-  { id: 5, pacienteId: 5, pacienteNombre: 'Lucía Fernández', dni: '33567890', fecha: fechaRelativa(0), hora: '10:30', especialidad: 'Odontología', estado: 'Pendiente' },
-  { id: 6, pacienteId: 6, pacienteNombre: 'Roberto Díaz', dni: '29345678', fecha: fechaRelativa(0), hora: '11:00', especialidad: 'Odontología', estado: 'Pendiente' },
+  { id: 1, pacienteId: 1, pacienteNombre: 'María González', dni: '28456789', fecha: fechaRelativa(0), hora: '08:30', doctor: 'Dr. Ramírez', especialidad: 'Clínica General', estado: 'Finalizado' },
+  { id: 2, pacienteId: 2, pacienteNombre: 'Carlos Rodríguez', dni: '31789456', fecha: fechaRelativa(0), hora: '09:00', doctor: 'Dra. Fernández', especialidad: 'Ortodoncia & Estética', estado: 'Finalizado' },
+  { id: 3, pacienteId: 3, pacienteNombre: 'Ana Martínez', dni: '35123456', fecha: fechaRelativa(0), hora: '09:30', doctor: 'Dr. Castro', especialidad: 'Cirugía & Implantes', estado: 'En curso' },
+  { id: 4, pacienteId: 4, pacienteNombre: 'Jorge López', dni: '26890123', fecha: fechaRelativa(0), hora: '10:00', doctor: 'Dr. Ramírez', especialidad: 'Clínica General', estado: 'Pendiente' },
+  { id: 5, pacienteId: 5, pacienteNombre: 'Lucía Fernández', dni: '33567890', fecha: fechaRelativa(0), hora: '10:30', doctor: 'Dra. Benítez', especialidad: 'Endodoncia & Prótesis', estado: 'Pendiente' },
+  { id: 6, pacienteId: 6, pacienteNombre: 'Roberto Díaz', dni: '29345678', fecha: fechaRelativa(0), hora: '11:00', doctor: 'Dr. Ramírez', especialidad: 'Clínica General', estado: 'Pendiente' },
   
   // Turnos para MAÑANA
-  { id: 7, pacienteId: 1, pacienteNombre: 'María González', dni: '28456789', fecha: fechaRelativa(1), hora: '08:00', especialidad: 'Odontología', estado: 'Pendiente' },
-  { id: 8, pacienteId: 4, pacienteNombre: 'Jorge López', dni: '26890123', fecha: fechaRelativa(1), hora: '09:30', especialidad: 'Clínica Médica', estado: 'Pendiente' },
-  { id: 9, pacienteId: 2, pacienteNombre: 'Carlos Rodríguez', dni: '31789456', fecha: fechaRelativa(1), hora: '10:00', especialidad: 'Odontología', estado: 'Pendiente' },
+  { id: 7, pacienteId: 1, pacienteNombre: 'María González', dni: '28456789', fecha: fechaRelativa(1), hora: '08:00', doctor: 'Dra. Fernández', especialidad: 'Ortodoncia & Estética', estado: 'Pendiente' },
+  { id: 8, pacienteId: 4, pacienteNombre: 'Jorge López', dni: '26890123', fecha: fechaRelativa(1), hora: '09:30', doctor: 'Dr. Ramírez', especialidad: 'Clínica General', estado: 'Pendiente' },
+  { id: 9, pacienteId: 2, pacienteNombre: 'Carlos Rodríguez', dni: '31789456', fecha: fechaRelativa(1), hora: '10:00', doctor: 'Dr. Castro', especialidad: 'Cirugía & Implantes', estado: 'Pendiente' },
   
   // Turnos para PASADO MAÑANA
-  { id: 10, pacienteId: 3, pacienteNombre: 'Ana Martínez', dni: '35123456', fecha: fechaRelativa(2), hora: '08:30', especialidad: 'Clínica Médica', estado: 'Pendiente' },
-  { id: 11, pacienteId: 5, pacienteNombre: 'Lucía Fernández', dni: '33567890', fecha: fechaRelativa(2), hora: '09:00', especialidad: 'Clínica Médica', estado: 'Pendiente' },
-  { id: 12, pacienteId: 6, pacienteNombre: 'Roberto Díaz', dni: '29345678', fecha: fechaRelativa(2), hora: '11:30', especialidad: 'Odontología', estado: 'Pendiente' },
+  { id: 10, pacienteId: 3, pacienteNombre: 'Ana Martínez', dni: '35123456', fecha: fechaRelativa(2), hora: '08:30', doctor: 'Dr. Ramírez', especialidad: 'Clínica General', estado: 'Pendiente' },
+  { id: 11, pacienteId: 5, pacienteNombre: 'Lucía Fernández', dni: '33567890', fecha: fechaRelativa(2), hora: '09:00', doctor: 'Dra. Benítez', especialidad: 'Endodoncia & Prótesis', estado: 'Pendiente' },
+  { id: 12, pacienteId: 6, pacienteNombre: 'Roberto Díaz', dni: '29345678', fecha: fechaRelativa(2), hora: '11:30', doctor: 'Dra. Fernández', especialidad: 'Ortodoncia & Estética', estado: 'Pendiente' },
 ];
 
 // Nomenclatura FDI: dientes adultos
